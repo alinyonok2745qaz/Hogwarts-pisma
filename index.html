@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приглашение в Хогвартс | Генератор Писем</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- html2canvas for capturing high-res parchment images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Google Fonts for Magical Parchment typography and calligraphy -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Marck+Script&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1b1625 0%, #0a0810 100%);
+            font-family: 'Cormorant Garamond', serif;
+            color: #e2d8b2;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-magic-title {
+            font-family: 'Cinzel Decorative', serif;
+        }
+
+        .font-handwritten {
+            font-family: 'Marck Script', cursive;
+        }
+
+        /* Parchment Texture background with aged noise and inner shadow */
+        .parchment {
+            background-color: #f4e4bc;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.12) 100%),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.12'/%3E%3C/svg%3E");
+            box-shadow: 
+                inset 0 0 60px rgba(110, 68, 20, 0.35),
+                inset 0 0 15px rgba(60, 30, 10, 0.4),
+                0 20px 40px rgba(0, 0, 0, 0.8),
+                0 0 50px rgba(234, 179, 8, 0.15);
+            border: 1px solid #c8a364;
+            color: #2b1810;
+        }
+
+        /* Deep rich warm ink color with clean legibility */
+        .letter-text {
+            color: #2b1810;
+            line-height: 1.8;
+        }
+
+        /* Animated Unroll effect */
+        .unroll-animation {
+            animation: unroll 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            transform-origin: top center;
+        }
+
+        @keyframes unroll {
+            0% {
+                opacity: 0;
+                transform: scaleY(0.05) scaleX(0.8) translateY(-60px);
+                filter: blur(8px);
+            }
+            60% {
+                opacity: 0.95;
+                transform: scaleY(1.03) scaleX(1.01) translateY(5px);
+                filter: blur(0px);
+            }
+            100% {
+                opacity: 1;
+                transform: scaleY(1) scaleX(1) translateY(0);
+            }
+        }
+
+        /* 3D Wax Seal Styling */
+        .wax-seal {
+            background: radial-gradient(circle at 35% 35%, #b91c1c 0%, #7f1d1d 60%, #450a0a 100%);
+            box-shadow: 
+                2px 4px 10px rgba(0,0,0,0.5),
+                inset -2px -2px 6px rgba(0,0,0,0.6),
+                inset 2px 2px 6px rgba(255,255,255,0.3);
+        }
+
+        .wax-seal-border {
+            border: 2px dashed rgba(255, 215, 0, 0.4);
+        }
+
+        /* Canvas background sparkles */
+        #sparkleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Glowing inputs */
+        .magic-input {
+            background: rgba(20, 15, 30, 0.8);
+            border: 1px solid #d4af37;
+            box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
+        }
+        .magic-input:focus {
+            outline: none;
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.4), 0 0 15px rgba(212, 175, 55, 0.6);
+            border-color: #fef08a;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col items-center justify-between min-h-screen p-4 md:p-8">
+
+    <!-- Background Magic Sparkle Canvas -->
+    <canvas id="sparkleCanvas"></canvas>
+
+    <!-- Header Section -->
+    <header class="relative z-10 text-center my-6 max-w-2xl">
+        <div class="inline-block p-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-3 animate-pulse">
+            <i class="fa-solid fa-wand-magic-sparkles text-yellow-400 text-2xl px-2"></i>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-magic-title tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-600 drop-shadow-md">
+            Сова из Хогвартса
+        </h1>
+        <p class="text-sm md:text-base text-amber-200/80 mt-2 font-light">
+            Введите имя или никнейм ВКонтакте, выберите факультет и сгенерируйте письмо с печатью!
+        </p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="relative z-10 w-full max-w-4xl flex flex-col items-center gap-8">
+        
+        <!-- Input Controls Box -->
+        <div class="w-full max-w-xl bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-amber-500/40 shadow-2xl flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+                <label for="vkNickname" class="text-xs uppercase tracking-widest text-amber-300/90 font-bold flex items-center gap-2">
+                    <i class="fa-brands fa-vk text-blue-400 text-base"></i> Никнейм ВК или Имя Получателя:
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="vkNickname" 
+                        placeholder="@durov или Элеонор Вандервурт" 
+                        value="Элеонор Вандервурт"
+                        class="magic-input w-full px-4 py-3 rounded-xl text-yellow-100 placeholder-amber-700/60 font-medium text-lg pr-10"
+                    />
+                    <button id="clearInputBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-300 transition">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Faculty Selection -->
+            <div class="flex flex-col gap-1">
+                <label for="facultySelect" class="text-xs uppercase tracking-widest text-amber-300/90 font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-hat-wizard text-amber-400 text-base"></i> Выберите Факультет:
+                </label>
+                <select id="facultySelect" class="magic-input w-full px-4 py-3 rounded-xl text-yellow-100 font-medium text-lg cursor-pointer">
+                    <option value="Когтевран" selected class="bg-slate-900 text-blue-400">Когтевран</option>
+                    <option value="Гриффиндор" class="bg-slate-900 text-red-400">Гриффиндор</option>
+                    <option value="Слизерин" class="bg-slate-900 text-emerald-400">Слизерин</option>
+                    <option value="Пуффендуй" class="bg-slate-900 text-yellow-400">Пуффендуй</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-2">
+                <button 
+                    id="generateBtn" 
+                    class="flex-1 py-3.5 px-6 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-700 hover:from-amber-500 hover:to-yellow-400 text-slate-950 font-bold text-base rounded-xl shadow-lg shadow-amber-500/20 transform active:scale-95 transition flex items-center justify-center gap-2"
+                >
+                    <i class="fa-solid fa-feather-pointed text-lg"></i>
+                    <span>Печатать Письмо</span>
+                </button>
+                <button 
+                    id="downloadBtn" 
+                    class="py-3.5 px-6 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/50 font-bold text-base rounded-xl shadow-md transform active:scale-95 transition flex items-center justify-center gap-2"
+                >
+                    <i class="fa-solid fa-download"></i>
+                    <span>Скачать Картинку</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Letter Container -->
+        <div id="letterContainer" class="w-full max-w-2xl unroll-animation my-4">
+            <!-- Parchment Paper Body -->
+            <div id="parchmentCard" class="parchment relative rounded-xl p-8 md:p-12 flex flex-col justify-between min-h-[720px] overflow-hidden">
+                
+                <!-- Background Hogwarts Crest Watermark -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none">
+                    <svg width="340" height="340" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 15 L170 40 V100 C170 145 100 185 100 185 C100 185 30 145 30 100 V40 Z" stroke="#2b1810" stroke-width="5" fill="none"/>
+                        <path d="M100 15 V185 M30 100 H170" stroke="#2b1810" stroke-width="3"/>
+                        <circle cx="100" cy="100" r="28" stroke="#2b1810" stroke-width="3" fill="none"/>
+                        <text x="100" y="108" font-size="28" font-family="Cinzel Decorative" font-weight="bold" fill="#2b1810" text-anchor="middle">H</text>
+                    </svg>
+                </div>
+
+                <!-- Header Block -->
+                <div class="text-center flex flex-col items-center relative z-10 border-b border-[#2b1810]/20 pb-6 mb-6">
+                    <!-- Hogwarts Crest Emblem -->
+                    <div class="w-20 h-20 mb-3 relative">
+                        <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+                            <path d="M50 5 L90 20 V50 C90 75 50 95 50 95 C50 95 10 75 10 50 V20 Z" fill="#3a1c0d" stroke="#854d0e" stroke-width="3"/>
+                            <path d="M50 8 L86 22 V48 C86 71 50 89 50 89 C50 89 14 71 14 48 V22 Z" fill="#f4e4bc"/>
+                            <path d="M50 8 V89 M14 48 H86" stroke="#854d0e" stroke-width="2"/>
+                            <path d="M14 22 H50 V48 H14 Z" fill="#7f1d1d" opacity="0.25"/>
+                            <path d="M50 22 H86 V48 H50 Z" fill="#14532d" opacity="0.25"/>
+                            <path d="M14 48 H50 V89 C32 80 18 66 14 48 Z" fill="#1e3a8a" opacity="0.25"/>
+                            <path d="M50 48 H86 C82 66 68 80 50 89 V48 Z" fill="#713f12" opacity="0.25"/>
+                            <text x="50" y="57" font-size="32" font-family="Cinzel Decorative" font-weight="bold" fill="#451a03" text-anchor="middle">H</text>
+                        </svg>
+                    </div>
+
+                    <h2 class="text-xl md:text-2xl font-magic-title font-bold text-[#2b1810] tracking-widest uppercase">
+                        ШКОЛА ЧАРОДЕЙСТВА И ВОЛШЕБСТВА
+                    </h2>
+                    <h3 class="text-base md:text-lg font-magic-title font-semibold text-[#3b1c0c] tracking-wider mt-1">
+                        «ХОГВАРТС»
+                    </h3>
+                </div>
+
+                <!-- Main Letter Body -->
+                <div class="relative z-10 flex-1 letter-text text-xl md:text-2xl space-y-5 my-2">
+                    <div>
+                        <p class="font-handwritten text-2xl md:text-3xl text-[#2b1810]">
+                            Уважаемый(ая)
+                        </p>
+                        <p class="font-handwritten text-2xl md:text-3xl text-[#2b1810] mt-1">
+                            <span id="recipientName" class="font-bold underline decoration-[#2b1810]/40 underline-offset-4 px-1">Элеонор Вандервурт</span>,
+                        </p>
+                    </div>
+
+                    <p class="font-handwritten text-2xl md:text-3xl leading-relaxed text-justify">
+                        Мы рады приветствовать Вас в Школе чародейства и волшебства «Хогвартс» на факультете:
+                    </p>
+
+                    <div class="text-center py-1">
+                        <span id="facultyName" class="font-handwritten text-3xl md:text-4xl font-bold text-[#2b1810] tracking-wide border-b border-[#2b1810]/30 pb-0.5 inline-block">
+                            Когтевран
+                        </span>
+                    </div>
+
+                    <p class="font-handwritten text-2xl md:text-3xl leading-relaxed text-justify">
+                        Отныне Вам предстоит стать частью многовековой истории нашего замка, прикоснуться к тайнам магии, открыть в себе новые способности и встретить тех, кто, возможно, останется рядом с Вами на долгие годы.
+                    </p>
+
+                    <!-- Director Signature Line -->
+                    <div class="pt-6">
+                        <p class="font-handwritten text-xl md:text-2xl text-[#2b1810] leading-snug">
+                            Директор Школы чародейства и Волшебства «Хогвартс»:
+                        </p>
+                        <p class="font-handwritten text-2xl md:text-3xl font-bold text-[#2b1810] mt-1">
+                            Джоанна-Гунора Адельманн
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer Block -->
+                <div class="relative z-10 flex justify-between items-end pt-6 mt-6 border-t border-[#2b1810]/20">
+                    <div class="text-xs md:text-sm font-serif text-[#3b1c0c] italic max-w-[220px] leading-snug">
+                        Школа Волшебства Хогвартс<br>
+                        Великобритания, Шотландия
+                    </div>
+
+                    <!-- 3D Red Wax Seal with Gold Text -->
+                    <div class="relative flex items-center justify-center">
+                        <div class="wax-seal w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-xl transform rotate-12 border-2 border-red-950">
+                            <div class="wax-seal-border w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center">
+                                <span class="text-yellow-300 font-magic-title text-sm md:text-lg font-black tracking-tighter drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">WoM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-10 text-center text-xs text-amber-300/50 my-6">
+        <p>Создано с помощью магии &bull; Поделитесь волшебным письмом с друзьями!</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const vkInput = document.getElementById('vkNickname');
+            const facultySelect = document.getElementById('facultySelect');
+            const clearBtn = document.getElementById('clearInputBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const recipientName = document.getElementById('recipientName');
+            const facultyName = document.getElementById('facultyName');
+            const letterContainer = document.getElementById('letterContainer');
+
+            // Sanitize input names
+            function cleanName(raw) {
+                if (!raw || !raw.trim()) return "Элеонор Вандервурт";
+                let name = raw.trim();
+                name = name.replace(/^https?:\/\/(www\.)?vk\.com\//i, '');
+                name = name.replace(/^@/, '');
+                return name.charAt(0).toUpperCase() + name.slice(1);
+            }
+
+            // Update letter recipient name and faculty with unroll animation trigger
+            function updateLetterName() {
+                const formattedName = cleanName(vkInput.value);
+                recipientName.textContent = formattedName;
+                facultyName.textContent = facultySelect.value;
+
+                letterContainer.classList.remove('unroll-animation');
+                void letterContainer.offsetWidth; // Force Reflow
+                letterContainer.classList.add('unroll-animation');
+
+                playMagicSound();
+            }
+
+            // Clear Input
+            clearBtn.addEventListener('click', () => {
+                vkInput.value = '';
+                vkInput.focus();
+            });
+
+            // Button Event Listeners
+            generateBtn.addEventListener('click', updateLetterName);
+
+            vkInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    updateLetterName();
+                }
+            });
+
+            // High-Res Image Export Fix via Temporary Cloned Fixed-Width Element
+            downloadBtn.addEventListener('click', () => {
+                const originalCard = document.getElementById('parchmentCard');
+                
+                downloadBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Создание...`;
+                downloadBtn.disabled = true;
+
+                // Create a temporary off-screen container with explicit portrait dimensions to avoid squishing
+                const cloneContainer = document.createElement('div');
+                cloneContainer.style.position = 'absolute';
+                cloneContainer.style.left = '-9999px';
+                cloneContainer.style.top = '-9999px';
+                cloneContainer.style.width = '700px';
+
+                // Clone parchment element
+                const clonedCard = originalCard.cloneNode(true);
+                clonedCard.style.width = '700px';
+                clonedCard.style.minHeight = '950px';
+                clonedCard.style.padding = '50px';
+                clonedCard.style.transform = 'none';
+
+                cloneContainer.appendChild(clonedCard);
+                document.body.appendChild(cloneContainer);
+
+                // Render clone using html2canvas
+                html2canvas(clonedCard, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: null,
+                    width: 700,
+                    windowWidth: 1200
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    const filename = `Hogwarts_Letter_${cleanName(vkInput.value)}.png`;
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    // Cleanup clone element
+                    document.body.removeChild(cloneContainer);
+
+                    downloadBtn.innerHTML = `<i class="fa-solid fa-download"></i> Скачать Картинку`;
+                    downloadBtn.disabled = false;
+                }).catch(err => {
+                    console.error('Export failed:', err);
+                    if (document.body.contains(cloneContainer)) {
+                        document.body.removeChild(cloneContainer);
+                    }
+                    downloadBtn.innerHTML = `<i class="fa-solid fa-download"></i> Скачать Картинку`;
+                    downloadBtn.disabled = false;
+                });
+            });
+
+            // Web Audio API Magical Chime
+            function playMagicSound() {
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    const ctx = new AudioCtx();
+                    
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+                        
+                        gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.5);
+                        
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        
+                        osc.start(ctx.currentTime + idx * 0.08);
+                        osc.stop(ctx.currentTime + idx * 0.08 + 0.5);
+                    });
+                } catch(e) {}
+            }
+
+            // Particle Sparkle Canvas Animation
+            const canvas = document.getElementById('sparkleCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2.5 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.speedY = -Math.random() * 0.8 - 0.2;
+                    this.opacity = Math.random() * 0.8 + 0.2;
+                    this.color = Math.random() > 0.3 ? '#fef08a' : '#f59e0b';
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.opacity -= 0.003;
+                    if (this.y < 0 || this.opacity <= 0) {
+                        this.reset();
+                        this.y = canvas.height + 10;
+                    }
+                }
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            for (let i = 0; i < 60; i++) {
+                particles.push(new Particle());
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        });
+    </script>
+</body>
+</html>
